@@ -17,6 +17,8 @@ import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from 'src/common/file/file.service';
+import * as fs from "fs";
+import * as path from "path";
 
 @Controller('user')
 export class UserController {
@@ -64,13 +66,28 @@ export class UserController {
   // 닉네임 유효성 검사는 client에서 구현 예정
   @Put(':id')
   @UseInterceptors(FileInterceptor('file', {storage: FileService.multerConfig()}))
-  async updateUser(@Body() user: User, @Param('id') id: string, @UploadedFile() file: Express.Multer.File): Promise<User | null> {
+  async updateUser(@Body() updateUser: User, @Param('id') id: string, @UploadedFile() file: Express.Multer.File): Promise<User | null> {
+    const existingUser = await this.userService.findOne(id);
+    if(!existingUser){
+      throw new Error('사용자가 존재하지않습니다.');
+    }
+
     if(file){
-      console.log(file.path);
-      user.userProfileImage = file.path;
+      if(existingUser.userProfileImage){
+        try{
+          const existingFilePath = existingUser.userProfileImage;
+          if(fs.existsSync(existingFilePath)){
+            fs.unlinkSync(existingFilePath);
+          }
+        }catch(error){
+          console.error("파일제거중 에러발생: ", error);
+        }
+      }
+
+      updateUser.userProfileImage = file.path;
     }
     
-    return this.userService.updateUser(id, user);
+    return this.userService.updateUser(id, updateUser);
   }
 
   // 회원 삭제
