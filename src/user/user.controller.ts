@@ -16,6 +16,7 @@ import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { FileService } from 'src/common/file/file.service';
 
 @Controller('user')
 export class UserController {
@@ -58,17 +59,20 @@ export class UserController {
     return res.status(200).send(jwt);
   }
 
-  // 회원 삭제
-  @Delete(':id')
-  async deleteUser(@Param('id') id: string): Promise<User | null> {
-    return this.userService.deleteUser(id);
-  }
-
   // 회원 수정
+  // 이미지 수정가능하도록 구현 예정
+  // 닉네임 유효성 검사는 client에서 구현 예정
   @Put(':id')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {storage: FileService.multerConfig()}))
   async updateUser(@Body() data: User, @Param('id') id: string, @UploadedFile() file: Express.Multer.File): Promise<User | null> {
     console.log(file);
     return this.userService.updateUser(id, data);
+  }
+
+  // 회원 삭제
+  // 이미지 업로드 구현 시 이미지 삭제 되도록 구현 예정
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string): Promise<User | null> {
+    return this.userService.deleteUser(id);
   }
 }
