@@ -11,19 +11,21 @@ model User {
   userId            String  @id @db.VarChar(100) @map("user_id")
   userPassword      String  @db.VarChar(100) @map("user_password")
   userName          String  @db.VarChar(100) @map("user_name")
-  userProfileImage String? @db.VarChar(200) @map("user_profile_image")
+  userProfileImage  String? @db.VarChar(200) @map("user_profile_image")
   userIntroduce     String? @db.Text @map("user_introduce")
   album              Album[]
 }
 
 model Album {
-  albumId     Int     @id @default(autoincrement()) @map("album_id")
+  albumId     Int      @id @default(autoincrement()) @map("album_id")
   spotifyCode Int? @map("spotify_code")
-  userId      String? @db.VarChar(100) @map("user_id")
+  userId      String?  @db.VarChar(100) @map("user_id")
   albumRate   Int? @map("album_rate")
-  albumReview String? @db.Text @map("album_review")
-  user         User?   @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction, map: "album_ibfk_1")
+  albumReview String?  @db.Text @map("album_review")
+  createAt    DateTime @default(now()) @db.DateTime(0) @map("create_at")
+  user         User?    @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction, map: "album_ibfk_1")
 
-  @@index([userId], map: "userId")
+  @@index([userId], map: "user_id")
 }
+
 

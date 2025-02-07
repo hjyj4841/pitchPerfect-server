@@ -1,10 +1,40 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { User } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService,
+    private readonly jwtService: JwtService) {}
+
+  // Access Token 발급
+  getAccessToken({user}): string {
+    return this.jwtService.sign({
+      id: user.userId,
+      name: user.userName
+    },
+    {
+      secret: process.env.ACCESS_TOKEN_SECRET_KEY,
+      expiresIn: '5m'
+    });
+  }
+
+  // RefreshToken 발급
+  setRefreshToken({user, res}) {
+    const refreshToken = this.jwtService.sign({
+      id: user.userId,
+      name: user.userName
+    },
+    {
+      secret: process.env.REFRESH_TOKEN_SECRET_KEY,
+      expiresIn: '2w'
+    });
+    // 배포 시 쿠키 보안옵션, CORS 추가
+    res.setHeader('Set-Cookie', `refreshToken=${refreshToken}`);
+    return;
+  }
 
   // 전체 조회
   async findAll(): Promise<User[]> {
@@ -18,9 +48,10 @@ export class UserService {
     });
   }
 
-  // 회원 추가
-  async addUser(data: User): Promise<User>{
-    return this.prismaService.user.create({data: data});
+  // 회원가입(비밀번호 암호화까지만 구현, 유효성체크 해야함. 아이디/닉네임 중복 확인)
+  async addUser(user: User): Promise<User>{
+    user.userPassword = await bcrypt.hash(user.userPassword, 10);
+    return this.prismaService.user.create({data: user});
   }
 
   // 회원삭제
