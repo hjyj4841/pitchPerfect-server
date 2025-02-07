@@ -64,9 +64,13 @@ export class UserController {
   // 닉네임 유효성 검사는 client에서 구현 예정
   @Put(':id')
   @UseInterceptors(FileInterceptor('file', {storage: FileService.multerConfig()}))
-  async updateUser(@Body() data: User, @Param('id') id: string, @UploadedFile() file: Express.Multer.File): Promise<User | null> {
-    console.log(file);
-    return this.userService.updateUser(id, data);
+  async updateUser(@Body() user: User, @Param('id') id: string, @UploadedFile() file: Express.Multer.File): Promise<User | null> {
+    if(file){
+      console.log(file.path);
+      user.userProfileImage = file.path;
+    }
+    
+    return this.userService.updateUser(id, user);
   }
 
   // 회원 삭제

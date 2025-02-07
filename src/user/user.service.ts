@@ -62,13 +62,13 @@ export class UserService{
   }
 
   // 회원수정
-  async updateUser(id: string, data: User): Promise<User | null>{
+  async updateUser(id: string, user: User): Promise<User | null>{
     return this.prismaService.user.update({
       where: {userId: id},
       data: {
-        userName: data.userName,
-        userProfileImage: data.userProfileImage,
-        userIntroduce: data.userIntroduce
+        userName: user.userName,
+        userProfileImage: user.userProfileImage,
+        userIntroduce: user.userIntroduce
       }
     });
   }
