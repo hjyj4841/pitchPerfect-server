@@ -18,7 +18,6 @@ import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from 'src/common/file/file.service';
 import * as fs from "fs";
-import * as path from "path";
 
 @Controller('user')
 export class UserController {
@@ -62,8 +61,8 @@ export class UserController {
   }
 
   // 회원 수정
-  // 이미지 수정가능하도록 구현 예정
   // 닉네임 유효성 검사는 client에서 구현 예정
+  // 기본 이미지로 변경 시 어떻게 처리할 것인가..?는 client 구현 하면서 구현 예정
   @Put(':id')
   @UseInterceptors(FileInterceptor('file', {storage: FileService.multerConfig()}))
   async updateUser(@Body() updateUser: User, @Param('id') id: string, @UploadedFile() file: Express.Multer.File): Promise<User | null> {
@@ -73,17 +72,7 @@ export class UserController {
     }
 
     if(file){
-      if(existingUser.userProfileImage){
-        try{
-          const existingFilePath = existingUser.userProfileImage;
-          if(fs.existsSync(existingFilePath)){
-            fs.unlinkSync(existingFilePath);
-          }
-        }catch(error){
-          console.error("파일제거중 에러발생: ", error);
-        }
-      }
-
+      this.userService.deleteImage(existingUser);
       updateUser.userProfileImage = file.path;
     }
     

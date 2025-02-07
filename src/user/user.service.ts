@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma.service';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import * as fs from 'fs';
 
 @Injectable()
 export class UserService{
@@ -34,6 +35,20 @@ export class UserService{
     // 배포 시 쿠키 보안옵션, CORS 추가
     res.setHeader('Set-Cookie', `refreshToken=${refreshToken}`);
     return;
+  }
+
+  // 이미지 삭제 로직
+  deleteImage(user: User) {
+    if(user.userProfileImage){
+      try{
+        const existingFilePath = user.userProfileImage;
+        if(fs.existsSync(existingFilePath)){
+          fs.unlinkSync(existingFilePath);
+        }
+      }catch(error){
+        console.error("파일제거중 에러발생: ", error);
+      }
+    }
   }
 
   // 전체 조회
