@@ -5,7 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
-export class UserService {
+export class UserService{
   constructor(private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService) {}
 

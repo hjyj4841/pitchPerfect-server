@@ -8,17 +8,18 @@ import {
   Put,
   Res,
   UnprocessableEntityException,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService,
-    private readonly jwtService: JwtService) {}
+  constructor(private readonly userService: UserService) {}
 
   // 회원 전체 조회
   @Get()
@@ -32,7 +33,8 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
-  // 회원가입(비밀번호 암호화까지만 구현, 유효성체크 해야함. 아이디/닉네임 중복 확인)
+  // 회원가입(비밀번호 암호화까지 구현)
+  // 유효성체크(이메일 등..은 client에서 구현 예정)
   @Post()
   async addUser(@Body() user: User): Promise<User | null> {
     return this.userService.addUser(user);
@@ -64,7 +66,9 @@ export class UserController {
 
   // 회원 수정
   @Put(':id')
-  async updateUser(@Body() data: User, @Param('id') id: string): Promise<User | null> {
+  @UseInterceptors(FileInterceptor('file'))
+  async updateUser(@Body() data: User, @Param('id') id: string, @UploadedFile() file: Express.Multer.File): Promise<User | null> {
+    console.log(file);
     return this.userService.updateUser(id, data);
   }
 }
