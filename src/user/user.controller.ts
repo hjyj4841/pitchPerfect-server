@@ -79,10 +79,15 @@ export class UserController {
     return this.userService.updateUser(id, updateUser);
   }
 
-  // 회원 삭제
-  // 이미지 업로드 구현 시 이미지 삭제 되도록 구현 예정
+  // 회원 탈퇴
   @Delete(':id')
   async deleteUser(@Param('id') id: string): Promise<User | null> {
+    const user: User | null = await this.userService.findOne(id);
+    if(!user){
+      throw new Error('사용자가 존재하지 않습니다.');
+    }
+
+    this.userService.deleteImage(user);
     return this.userService.deleteUser(id);
   }
 }
