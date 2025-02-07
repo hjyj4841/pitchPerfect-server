@@ -17,7 +17,6 @@ import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from 'src/common/file/file.service';
-import * as fs from "fs";
 
 @Controller('user')
 export class UserController {
