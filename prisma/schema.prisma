@@ -18,7 +18,7 @@ model User {
 
 model Album {
   albumId     Int      @id @default(autoincrement()) @map("album_id")
-  spotifyCode Int? @map("spotify_code")
+  spotifyCode String @map("spotify_code")
   userId      String?  @db.VarChar(100) @map("user_id")
   albumRate   Int? @map("album_rate")
   albumReview String?  @db.Text @map("album_review")

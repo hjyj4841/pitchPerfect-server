@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Request,
   Res,
   UnprocessableEntityException,
   UploadedFile,
@@ -17,10 +18,14 @@ import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from 'src/common/file/file.service';
+import { AuthService } from 'src/auth/auth.service';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly authService: AuthService
+  ) {}
 
   // 회원 전체 조회
   @Get()
@@ -53,8 +58,8 @@ export class UserController {
       .compare(user.userPassword, accessUser.userPassword);
     if(!validatePassowrd) throw new UnprocessableEntityException('비밀번호가 일치하지 않습니다.');
 
-    this.userService.setRefreshToken({user, res});
-    const jwt = this.userService.getAccessToken({user});
+    this.authService.setRefreshToken({user, res});
+    const jwt = this.authService.getAccessToken({user});
 
     return res.status(200).send(jwt);
   }
@@ -62,31 +67,33 @@ export class UserController {
   // 회원 수정
   // 닉네임 유효성 검사는 client에서 구현 예정
   // 기본 이미지로 변경 시 어떻게 처리할 것인가..?는 client 구현 하면서 구현 예정
-  @Put(':id')
+  @Put()
   @UseInterceptors(FileInterceptor('file', {storage: FileService.multerConfig()}))
-  async updateUser(@Body() updateUser: User, @Param('id') id: string, @UploadedFile() file: Express.Multer.File): Promise<User | null> {
-    const existingUser = await this.userService.findOne(id);
-    if(!existingUser){
-      throw new Error('사용자가 존재하지않습니다.');
-    }
+  async updateUser(@Body() updateUser: User, @Request() req: Request, @UploadedFile() file: Express.Multer.File): Promise<User | null> {
+    const user = this.authService.validateAccessToken(req);
+
+    const existingUser = await this.userService.findOne(user.id);
+    if(!existingUser) throw new Error('사용자가 존재하지않습니다.');
 
     if(file){
-      this.userService.deleteImage(existingUser);
+      await this.userService.deleteImage(existingUser);
       updateUser.userProfileImage = file.path;
     }
     
-    return this.userService.updateUser(id, updateUser);
+    return this.userService.updateUser(user.id, updateUser);
   }
 
   // 회원 탈퇴
-  @Delete(':id')
-  async deleteUser(@Param('id') id: string): Promise<User | null> {
-    const user: User | null = await this.userService.findOne(id);
+  @Delete()
+  async deleteUser(@Request() req: Request): Promise<User | null> {
+    const accessUser = this.authService.validateAccessToken(req);
+
+    const user: User | null = await this.userService.findOne(accessUser.id);
     if(!user){
       throw new Error('사용자가 존재하지 않습니다.');
     }
 
     this.userService.deleteImage(user);
-    return this.userService.deleteUser(id);
+    return this.userService.deleteUser(user.userId);
   }
 }
