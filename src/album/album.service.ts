@@ -6,9 +6,11 @@ import { PrismaService } from 'src/prisma.service';
 export class AlbumService {
   constructor (private readonly prismaService: PrismaService){}
 
-  // 앨범 평가 추가
-  async addAlbumRate(album: Album){
-    
+  // 앨범 별점 추가
+  async addAlbumScope(album: Album): Promise<Album>{
+    return this.prismaService.album.create({
+      data: album
+    });
   }
   
 }
