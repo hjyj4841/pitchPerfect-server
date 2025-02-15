@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
+import axios from 'axios';
+import * as qs from 'qs';
 
 @Injectable()
 export class AuthService {
@@ -46,6 +47,30 @@ export class AuthService {
             });
         } catch(error){
             throw new Error('유효하지 않은 토큰입니다.');
+        }
+    }
+
+    // spotify api token 요청
+    async getSpotifyToken(): Promise<string>{
+        const authHeader = Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`)
+            .toString('base64');
+            
+        const body = qs.stringify({
+            grant_type: 'client_credentials',
+        });
+
+        try{
+            const response = await axios.post('https://accounts.spotify.com/api/token', body, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    Authorization: `Basic ${authHeader}`,
+                },
+            });
+
+            return response.data.access_token;
+        } catch(err){
+            console.error('spotify API Token 요청 중 오류', err);
+            throw new Error('spotify API Token 요청 중 오류');
         }
     }
 }
